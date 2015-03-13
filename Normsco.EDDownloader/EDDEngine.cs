@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
+using System.ComponentModel;
 
 namespace Normsco.EDDownloader
 {
@@ -25,105 +26,106 @@ namespace Normsco.EDDownloader
         public DownloaderViewModel Model { get; set; }
 
 
-        private string installLocation = @"D:\EDDTester\";
-        private SHA1 sha;
-        private int maxConcurrentDownloads = 3;
+        //private string installLocation = @"D:\Program Files (x86)\Frontier\EDLaunch\Products\FORC-FDEV-D-1000\";
+        public string installLocation = @"D:\EDDtester\";        
         private object modelLock = new object();
 
-
-        public void Init()
+        public async void DownloadEd(string installPath)
         {
-            Model.IsDownloading = false;
-            Model.IgnoredFiles = new List<ManifestFile>();
-            Model.Clients = new BlockingCollection<EDDWebClient>();
-            sha = SHA1.Create();
+            Init(installPath);
+            await Start();
+        }
 
-            Console.WriteLine("Loading files from manifest.");
+
+        public async void Init(string installPath)
+        {
+            installLocation = installPath;
             LoadFiles(GetManifestXmlDoc());
-            Model.TotalFiles = Model.AllFiles.Count();
-
-            Console.WriteLine("Creating folders.");
+            Model.FilesToDownload = new BlockingCollection<ManifestFile>();
+            Model.DownloadingFiles = new BlockingCollection<ManifestFile>();
             CreateFolders();
-            Console.WriteLine("Determining files to skip.");
-            RemoveUnchangedFilesFromList();
-
             Model.TotalBytesToDownload = Model.AllFiles.Sum(f => (decimal)f.Size);
             Model.TotalBytesDownloaded = 0;
-            Console.WriteLine("Init finished.");
         }
 
-        public void Start()
+        public async Task Start()
         {
-            Model.IsDownloading = true;
-            Model.DownloadQueue = new BlockingCollection<ManifestFile>();
 
-            foreach (var download in Model.AllFiles)
+            foreach (var item in Model.AllFiles)
             {
-                Model.DownloadQueue.Add(download);
+                Model.FilesToDownload.Add(item);
             }
-            Model.DownloadQueue.CompleteAdding();
+            Model.FilesToDownload.CompleteAdding();
 
-
-            for (int i = 0; i < maxConcurrentDownloads; i++)
+            for (int i = 0; i < 8; ++i)
             {
-                var client = new EDDWebClient();
-                Model.Clients.Add(client);
-                client.DownloadProgressChanged += Client_DownloadProgressChanged;
-                client.DownloadFileCompleted += Client_DownloadFileCompleted;
-                StartDownload(client);
+                var client = new WebClient();
+                client.DownloadProgressChanged += DownloadProgressChanged;
+                client.DownloadFileCompleted += DownloadFileCompleted;
+                await StartDownload(client);
             }
         }
 
-        private void StartDownload(EDDWebClient client)
+        async Task StartDownload(WebClient client)
         {
-            
-            ManifestFile manifestFile;
-
-            if (Model.DownloadQueue.TryTake(out manifestFile))
+            ManifestFile file;
+            if (Model.FilesToDownload.TryTake(out file))
             {
-                client.ManifestFile = manifestFile;
-                Debug.Write("Downloading " + client.ManifestFile.Path);
-                client.DownloadFileAsync(new Uri(manifestFile.Download), installLocation + manifestFile.Path, manifestFile);
+                if (await CheckUpToDateAsync(file))
+                {
+                    file.Percentage = 100;
+                    file.IsDownloading = false;
+                    Model.DownloadingFiles.Add(file);
+                    await StartDownload(client);                }
+                else
+                {
+                    // start the asynchronous download.
+                    file.Client = client;
+                    file.IsDownloading = true;
+                    Model.DownloadingFiles.Add(file);
+                    client.DownloadFileAsync(new Uri(file.Download), file.Path, file);
+                }
             }
             else
             {
+                // Couldn't get a url. The queue is empty.
+                // Dispose the WebClient instance.
                 client.Dispose();
             }
         }
 
-        private void Client_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
+        private Task<bool> CheckUpToDateAsync(ManifestFile file)
         {
-            Debug.Write("File Complete");
-            StartDownload(sender as EDDWebClient);
-
-        }
-
-        private void Client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
-        {
-            var m = e.UserState as ManifestFile;
-            m.Percentage = e.ProgressPercentage;
-            Debug.Write("Dowload Progress " + e.ProgressPercentage);
-            
-        }
-
-        private void RemoveUnchangedFilesFromList()
-        {
-            foreach (var file in Model.AllFiles.ToList())
+            return Task.Run(() =>
             {
-                if (File.Exists(installLocation + file.Path) &&
-                    CheckHash(installLocation + file.Path, file.Hash))
-                {
-                    Console.WriteLine("Ignoring " + file.Path);
-                    Model.AllFiles.Remove(file);
-                    Model.IgnoredFiles.Add(file);
-                }
-            }
+                return (File.Exists(file.Path) && CheckHash(file.Path, file.Hash));
+            });
         }
 
 
-
-        private bool CheckHash(string path, string hash)
+        void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
+            var file = e.UserState as ManifestFile;
+            file.Percentage = e.ProgressPercentage;
+        }
+
+        async void DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            // The file has been downloaded.
+            // DownloadState is in the UserState property
+            var file = (ManifestFile)e.UserState;
+            file.IsDownloading = false;
+            Model.TotalBytesDownloaded += file.Size;
+            // If an error occurred, it will be identified in the e.Error property.
+            // Do whatever processing is necessary to complete this download.
+            // And then start a new download.
+
+            await StartDownload(file.Client);
+        }
+
+        public bool CheckHash(string path, string hash)
+        {
+            var sha = SHA1.Create();
             var fileHash = sha.ComputeHash(File.OpenRead(path));
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < fileHash.Length; i++)
@@ -144,7 +146,7 @@ namespace Normsco.EDDownloader
         {
             foreach (var file in Model.AllFiles)
             {
-                var folder = Path.GetDirectoryName(installLocation + file.Path);
+                var folder = Path.GetDirectoryName(file.Path);
                 if (!Directory.Exists(folder))
                 {
                     Directory.CreateDirectory(folder);
@@ -158,10 +160,11 @@ namespace Normsco.EDDownloader
                 .Select(t =>
                     new ManifestFile
                     {
-                        Path = t.Element("Path").Value,
+                        Path = installLocation + t.Element("Path").Value,
                         Download = t.Element("Download").Value,
                         Size = int.Parse(t.Element("Size").Value),
-                        Hash = t.Element("Hash").Value
+                        Hash = t.Element("Hash").Value,
+                        IsDownloading = false
                     }
                 )
                 .ToList();
@@ -187,6 +190,7 @@ namespace Normsco.EDDownloader
             }
         }
 
+
         private string HexString2Ascii(string hexString)
         {
             StringBuilder sb = new StringBuilder();
@@ -197,78 +201,13 @@ namespace Normsco.EDDownloader
             return sb.ToString();
         }
 
-        private static async Task<Tuple<string, string, Exception>> DownloadFileTaskAsync(string remotePath,
-    string localPath = null, int timeOut = 3000)
+        protected virtual void OnProgressChanged(EventArgs e)
         {
-            try
-            {
-                if (remotePath == null)
-                {
-                    Debug.WriteLine("DownloadFileTaskAsync (null remote path): skipping");
-                    throw new ArgumentNullException("remotePath");
-                }
-
-                if (localPath == null)
-                {
-                    Debug.WriteLine(
-                        string.Format(
-                            "DownloadFileTaskAsync (null local path): generating a temporary file name for {0}",
-                            remotePath));
-                    localPath = Path.GetTempFileName();
-                }
-
-                using (var client = new WebClient())
-                {
-                    TimerCallback timerCallback = c =>
-                    {
-                        var webClient = (WebClient)c;
-                        if (!webClient.IsBusy) return;
-                        webClient.CancelAsync();
-                        Debug.WriteLine(string.Format("DownloadFileTaskAsync (time out due): {0}", remotePath));
-                    };
-                    using (var timer = new Timer(timerCallback, client, timeOut, Timeout.Infinite))
-                    {
-                        await client.DownloadFileTaskAsync(remotePath, localPath);
-                    }
-                    Debug.WriteLine(string.Format("DownloadFileTaskAsync (downloaded): {0}", remotePath));
-                    return new Tuple<string, string, Exception>(remotePath, localPath, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                return new Tuple<string, string, Exception>(remotePath, null, ex);
-            }
+            EventHandler<EventArgs> handler = ProgressChanged;
+            if (handler != null) handler(this, e);
         }
-    }
-
-    public static class Extensions
-    {
-        public static Task ForEachAsync<TSource, TResult>(
-            this IEnumerable<TSource> source,
-            Func<TSource, Task<TResult>> taskSelector, Action<TSource, TResult> resultProcessor)
-        {
-            var oneAtATime = new SemaphoreSlim(5, 10);
-            return Task.WhenAll(
-                from item in source
-                select ProcessAsync(item, taskSelector, resultProcessor, oneAtATime));
-        }
-
-        private static async Task ProcessAsync<TSource, TResult>(
-            TSource item,
-            Func<TSource, Task<TResult>> taskSelector, Action<TSource, TResult> resultProcessor,
-            SemaphoreSlim oneAtATime)
-        {
-            TResult result = await taskSelector(item);
-            await oneAtATime.WaitAsync();
-            try
-            {
-                resultProcessor(item, result);
-            }
-            finally
-            {
-                oneAtATime.Release();
-            }
-        }
+        public event EventHandler<EventArgs> ProgressChanged;
+        
     }
 }
 
