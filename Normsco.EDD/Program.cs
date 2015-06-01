@@ -13,7 +13,7 @@ namespace Normsco.EDD
         static EDDEngine d;
         static string[] downloadAnim = new[] { "|", "/", "-", "\\" };
         static long counter = 0;
-        static int maxDownloaders = 10;
+        static int maxDownloaders = 1;
         static void Main(string[] args)
         {
             if (args.Count() > 0)
@@ -53,6 +53,7 @@ namespace Normsco.EDD
             ConsoleWriteColor(ConsoleColor.Green, "{0}", ProgressBar((decimal)d.Model.TotalBytesDownloaded / d.Model.TotalBytesToDownload));
 
             var downloads = d.Model.DownloadingFiles.Where(f => f.IsDownloading).ToList();
+            
 
             foreach (var file in downloads)
             {
@@ -62,6 +63,9 @@ namespace Normsco.EDD
             var blanks = maxDownloaders - downloads.Count();
 
             Console.Write(new String(' ', blanks * 80));
+
+            Console.Write("{0} files left to download.",
+                d.Model.FilesToDownload.Count());
 
             timer.Start();
         }

@@ -27,7 +27,7 @@ namespace Normsco.EDDownloader
 
 
         //private string installLocation = @"D:\Program Files (x86)\Frontier\EDLaunch\Products\FORC-FDEV-D-1000\";
-        private string installLocation = @"D:\EDDtester\";        
+        private string installLocation = @"D:\EDDtester\";
         private object modelLock = new object();
         private int maxConcurrentDownloads = 8;
 
@@ -38,7 +38,7 @@ namespace Normsco.EDDownloader
         }
 
 
-        public void Init(string installPath,int maxDownloaders )
+        public void Init(string installPath, int maxDownloaders)
         {
             installLocation = installPath;
             maxConcurrentDownloads = maxDownloaders;
@@ -78,7 +78,8 @@ namespace Normsco.EDDownloader
                     file.Percentage = 100;
                     file.IsDownloading = false;
                     Model.DownloadingFiles.Add(file);
-                    await StartDownload(client);                }
+                    await StartDownload(client);
+                }
                 else
                 {
                     // start the asynchronous download.
@@ -170,7 +171,7 @@ namespace Normsco.EDDownloader
                         IsDownloading = false
                     }
                 )
-                .ToList();
+                .ToList().OrderBy(o => o.Size).ToList();
         }
 
         private XDocument GetManifestXmlDoc()
@@ -210,7 +211,7 @@ namespace Normsco.EDDownloader
             if (handler != null) handler(this, e);
         }
         public event EventHandler<EventArgs> ProgressChanged;
-        
+
     }
 }
 
