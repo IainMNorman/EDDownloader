@@ -77,18 +77,19 @@ namespace Normsco.EDD
 
             Console.Write(new String(' ', blanks * 80));
 
-            Console.Write("{0} files left to download.",
-                d.Model.FilesToDownload.Count());
+            Console.Write("{1}{0} files left to download.",
+                d.Model.FilesToDownload.Count(),
+                Environment.NewLine);
 
             timer.Start();
         }
 
         static string ProgressBar(decimal percent)
         {
-            var number = (int)(78 * percent);
+            var number = (int)(77 * percent);
             var bar = new String('█', number);
-            var space = new String('░', 78 - number);
-            return String.Format("[{0}{1}]", bar, space);
+            var space = new String('░', 77 - number);
+            return String.Format("[{0}{1}]{2}", bar, space, Environment.NewLine);
         }
 
         static void ConsoleWriteColor(ConsoleColor color, string format, params object[] args)
