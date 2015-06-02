@@ -10,7 +10,7 @@ Then from the launcher choose option=>validate game files to make sure EDDownloa
 
 ## Usage
 
-Download the [latest release](https://github.com/IainMNorman/EDDownloader/releases/download/0.2/edd.alpha.0.2.zip), unzip and double click edd.exe to run.
+Download the [latest release](https://github.com/IainMNorman/EDDownloader/releases/download/0.3/edd.alpha.0.3.zip), unzip and double click edd.exe to run.
 
 You can also pass arguments if you run from the commandline or create a shortcut.
 
