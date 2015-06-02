@@ -1,6 +1,6 @@
-# EDDownloader
+# EDDownloader - Elite: Dangerous Downloader
 
-A quick and dirty console app that downloaded EliteDangerous files from the public server.
+A quick and dirty console app that downloads Elite: Dangerous files from the public server.
 
 ## Alpha notes
 
