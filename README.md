@@ -17,3 +17,7 @@ You can also pass arguments if you run from the commandline or create a shortcut
 edd [max downloads] [location path]
 
 If you don't provide _edd_ with either arguments then it will default to 16 concurrent downloads and downloads to a 'download' folder in it's current location.
+
+### Legal
+
+There shoulnd't be a problem with this but if Frontier wish it removed I will do so.
