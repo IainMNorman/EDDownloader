@@ -14,11 +14,16 @@ namespace Normsco.EDD
         static string[] downloadAnim = new[] { "|", "/", "-", "\\" };
         static long counter = 0;
         static int maxDownloaders = 1;
+        static string downloadLocation = AppDomain.CurrentDomain.BaseDirectory + "\\download\\";
         static void Main(string[] args)
         {
             if (args.Count() > 0)
             {
-                int.TryParse(args[0], out maxDownloaders);
+                int.TryParse(args[0], out maxDownloaders);               
+                if (args.Count()>1)
+                {
+                    downloadLocation = args[1];
+                }
             }
             Console.Write("Press ENTER key to start downloading...");
             Console.ReadLine();
@@ -26,7 +31,7 @@ namespace Normsco.EDD
             d = new EDDEngine();
 
 
-            d.DownloadEd(AppDomain.CurrentDomain.BaseDirectory + "\\download\\", maxDownloaders);
+            d.DownloadEd(downloadLocation, maxDownloaders);
 
             timer.Interval = 50;
             timer.Elapsed += timer_Elapsed;
