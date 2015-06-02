@@ -13,7 +13,7 @@ namespace Normsco.EDD
         static EDDEngine d;
         static string[] downloadAnim = new[] { "|", "/", "-", "\\" };
         static long counter = 0;
-        static int maxDownloaders = 1;
+        static int maxDownloaders = 16;
         static string downloadLocation = AppDomain.CurrentDomain.BaseDirectory + "\\download\\";
         static void Main(string[] args)
         {
@@ -25,9 +25,14 @@ namespace Normsco.EDD
                     downloadLocation = args[1];
                 }
             }
-            Console.Write("Press ENTER key to start downloading...");
+            Console.WriteLine("Usage");
+            Console.WriteLine("=====");
+            Console.WriteLine("edd [Concurrant Downloads] [Download Location]");
+            Console.WriteLine();
+            Console.WriteLine("Downloading to {0} with {1} downloaders", downloadLocation, maxDownloaders);
+            Console.WriteLine("Press a key to start downloading...");
             Console.ReadLine();
-            Console.WriteLine("Initialising");
+            Console.WriteLine("Downloading manifest and creating folders.");
             d = new EDDEngine();
 
 

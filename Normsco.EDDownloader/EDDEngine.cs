@@ -45,6 +45,7 @@ namespace Normsco.EDDownloader
             LoadFiles(GetManifestXmlDoc());
             Model.FilesToDownload = new BlockingCollection<ManifestFile>();
             Model.DownloadingFiles = new BlockingCollection<ManifestFile>();
+
             CreateFolders();
             Model.TotalBytesToDownload = Model.AllFiles.Sum(f => (decimal)f.Size);
             Model.TotalBytesDownloaded = 0;
