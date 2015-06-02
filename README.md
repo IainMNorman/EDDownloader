@@ -4,7 +4,9 @@ A quick and dirty console app that downloaded EliteDangerous files from the publ
 
 ## Usage
 
-Download the latest release : https://github.com/IainMNorman/EDDownloader/releases/download/0.2/edd.alpha.0.2.zip
+Download the [latest release](https://github.com/IainMNorman/EDDownloader/releases/download/0.2/edd.alpha.0.2.zip), unzip and double click edd.exe to run.
+
+You can also pass arguments if you run from the commandline or create a shortcut.
 
 edd [max downloads] [location path]
 
