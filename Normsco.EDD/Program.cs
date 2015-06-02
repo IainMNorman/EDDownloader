@@ -15,6 +15,9 @@ namespace Normsco.EDD
         static long counter = 0;
         static int maxDownloaders = 16;
         static string downloadLocation = AppDomain.CurrentDomain.BaseDirectory + "\\download\\";
+
+        static ConsoleColor[] colors = { ConsoleColor.Cyan, ConsoleColor.Green, ConsoleColor.Magenta, ConsoleColor.Yellow, ConsoleColor.White, ConsoleColor.Red, ConsoleColor.DarkYellow, ConsoleColor.DarkMagenta };
+
         static void Main(string[] args)
         {
             if (args.Count() > 0)
@@ -30,7 +33,7 @@ namespace Normsco.EDD
             Console.WriteLine("edd [Concurrant Downloads] [Download Location]");
             Console.WriteLine();
             Console.WriteLine("Downloading to {0} with {1} downloaders", downloadLocation, maxDownloaders);
-            Console.WriteLine("Press a key to start downloading...");
+            Console.WriteLine("Press [ENTER/RETURN] key to start downloading...");
             Console.ReadLine();
             Console.WriteLine("Downloading manifest and creating folders.");
             d = new EDDEngine();
@@ -67,7 +70,7 @@ namespace Normsco.EDD
 
             foreach (var file in downloads)
             {
-                ConsoleWriteColor(ConsoleColor.Cyan, "{0}", ProgressBar((decimal)file.BytesDownloaded / file.Size));
+                ConsoleWriteColor(colors[file.Size % 8], "{0}", ProgressBar((decimal)file.BytesDownloaded / file.Size));
             }
 
             var blanks = maxDownloaders - downloads.Count();

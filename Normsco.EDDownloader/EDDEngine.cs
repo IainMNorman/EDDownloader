@@ -79,6 +79,7 @@ namespace Normsco.EDDownloader
                     file.Percentage = 100;
                     file.IsDownloading = false;
                     Model.DownloadingFiles.Add(file);
+                    Model.TotalBytesDownloaded += file.Size;
                     await StartDownload(client);
                 }
                 else
@@ -179,7 +180,7 @@ namespace Normsco.EDDownloader
                         IsDownloading = false
                     }
                 )
-                .ToList().OrderBy(o => o.Size).ToList();
+                .ToList();
         }
 
         private XDocument GetManifestXmlDoc()
