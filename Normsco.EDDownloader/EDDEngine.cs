@@ -180,7 +180,7 @@ namespace Normsco.EDDownloader
                         IsDownloading = false
                     }
                 )
-                .ToList().OrderBy(o => o.Size).ToList();
+                .ToList();
         }
 
         private XDocument GetManifestXmlDoc()
