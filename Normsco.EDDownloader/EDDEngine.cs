@@ -102,7 +102,14 @@ namespace Normsco.EDDownloader
         {
             return Task.Run(() =>
             {
-                return (File.Exists(file.Path) && CheckHash(file.Path, file.Hash));
+                if (File.Exists(file.Path))
+                {
+                    return CheckHash(file.Path, file.Hash);
+                }
+                else
+                {
+                    return false;
+                }
             });
         }
 
