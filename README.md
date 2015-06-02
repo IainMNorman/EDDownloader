@@ -2,6 +2,8 @@
 
 A quick and dirty console app that downloaded EliteDangerous files from the public server.
 
+## Alpha notes
+
 This will download the latest publically available release. Not any beta. It's currently not dealing well when it's checking existing files so it's best to always download to a clean folder and then copy those files over to your ED install.
 
 Then from the launcher choose option=>validate game files to make sure EDDownloader didnt' miss anything.
