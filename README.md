@@ -18,6 +18,10 @@ edd [max downloads] [location path]
 
 If you don't provide _edd_ with either arguments then it will default to 16 concurrent downloads and downloads to a 'download' folder in it's current location.
 
-### Legal
+## Disclaimer
+
+If this screws up your computer or ED install it's not my fault. It's alpha. You have been warned.
+
+## Legal
 
 There shoulnd't be a problem with this but if Frontier wish it removed I will do so.
